@@ -7,12 +7,12 @@ assistance.
 
 ---
 
-## 1. Install Claude Code on a vanilla macOS
+## 1. Install Claude Code on a fresh macOS
 
 You need a terminal (the built-in **Terminal.app** is fine) and an Anthropic
 account with Claude Code access (Claude Pro/Max subscription or an API account).
 
-### 1a. Install the CLI
+### 1a. Install the claude command-line interface
 
 ```bash
 curl -fsSL https://claude.ai/install.sh | bash
@@ -44,6 +44,26 @@ Keep it updated over time with:
 claude update
 ```
 
+### 1c. Install uv (Python package manager)
+
+[`uv`](https://docs.astral.sh/uv/) is a simple package manager for python environments and dependencies.
+Install it once:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Restart your terminal (or `source` your shell profile) so `uv` is on your
+`PATH`, then verify:
+
+```bash
+uv --version
+```
+
+You don't need to create environments or install packages by hand — the agent
+runs `uv init` and `uv add <package>` for you as the analysis grows (see the
+example session below). You just need `uv` itself available.
+
 ---
 
 ## 2. Install VS Code
@@ -59,45 +79,52 @@ project directory (see below) to start working there.
 
 ## 3. Set up your first CMEMS project
 
-Create a dedicated working directory and start Claude Code inside it. Claude Code
-works best when launched from the root of the project it should reason about.
+First create a dedicated working directory for the project:
 
 ```bash
 mkdir -p "$HOME/projects/cmems_claude_first_steps"
-cd "$HOME/projects/cmems_claude_first_steps"
-
-# launch the agent in this directory
-claude
 ```
+
+Then open that folder in VS Code (**File → Open Folder…**) so you can view and
+edit its files as you go.
 
 ### Add the project guidelines
 
-This repository includes an example [`CLAUDE.md`](CLAUDE.md) with working
-conventions for the project (Python via `uv`, plotting and analysis style, a
-figure-naming scheme). Claude Code loads a `CLAUDE.md` from the project root
-automatically each session.
+An example [`CLAUDE.md`](docs/CLAUDE.md) with working conventions for this kind of
+project (Python via `uv`, plotting and analysis style, a figure-naming scheme)
+lives alongside this guide. Claude Code loads a `CLAUDE.md` from the project
+root automatically each session, so it will pick these up without you having to
+repeat them.
 
-Download it into your project directory and open it in VS Code to read what the
-agent will follow:
+Grab the contents of the example [`CLAUDE.md`](docs/CLAUDE.md) and save them as a
+file named `CLAUDE.md` in your project directory, then read through it to see
+what the agent will follow.
 
-1. Open the [`CLAUDE.md`](CLAUDE.md) file, use **Download raw file**, and save it
-   as `CLAUDE.md` in `$HOME/projects/cmems_claude_first_steps/`.
-2. In VS Code, **File → Open Folder…** the project directory, then open
-   `CLAUDE.md` and read through the guidelines.
+### Launch Claude Code
+
+Claude Code works best when launched from the root of the project it should
+reason about, so start it from inside the project directory:
+
+```bash
+cd "$HOME/projects/cmems_claude_first_steps"
+claude
+```
 
 ### Suggested first steps inside the session
 
-Once Claude Code is running in `cmems_claude_first_steps/`, try asking it in
-plain language, for example:
+Once Claude Code is running, drive the analysis by asking it in plain language.
+These are the actual prompts that drove the example session:
 
-- *"Set up a Python environment for CMEMS ocean-data analysis using
-  `copernicusmarine`, `xarray`, and `matplotlib`."*
-- *"Write a `CLAUDE.md` documenting how this project is organized so future
-  sessions have context."*
-- *"Download a small sea-surface-temperature subset from CMEMS and plot a map."*
+- *"Create a plot of North Atlantic sea-surface temperature today from the
+  Copernicus analysis/forecast product. Trim the color limits to the actual data
+  range."*
+- *"Now add a second plot with sea-surface salinity (SSS)."*
+- *"Finally, create a T–S plot based on the same SSS and SST fields."*
 
 The agent will propose commands and file edits and ask for your approval before
-running them.
+running them. For a walk-through of what it does with each prompt — from
+environment setup through the rendered figures — see the annotated
+[example session](docs/example_session.md).
 
 ### A couple of tips
 
@@ -109,12 +136,3 @@ running them.
 - **You need CMEMS credentials** to download data. Register (free) at
   <https://marine.copernicus.eu/> and log in once with
   `copernicusmarine login` — the agent can walk you through this.
-
----
-
-## Handy references
-
-- Claude Code docs: <https://docs.claude.com/en/docs/claude-code>
-- Copernicus Marine toolbox: <https://help.marine.copernicus.eu/en/collections/9080063-copernicus-marine-toolbox>
-- `claude doctor` — diagnose a broken install
-- `/help` inside a session — list all in-session commands
