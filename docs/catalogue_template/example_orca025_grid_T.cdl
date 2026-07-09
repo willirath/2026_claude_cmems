@@ -1,0 +1,81 @@
+// Illustrative example — the output of:
+//     ncdump -h -s ORCA025-2020ref_1m_19580101_19581231_grid_T.nc
+// Replace with a real dump of your own file (see regenerate.sh). The point of a
+// catalogued header is that _Storage / _ChunkSizes / _DeflateLevel / _Shuffle are
+// visible without reading any data, so dask chunks can be aligned to them.
+
+netcdf ORCA025-2020ref_1m_19580101_19581231_grid_T {
+dimensions:
+	x = 1442 ;
+	y = 1021 ;
+	deptht = 75 ;
+	time_counter = UNLIMITED ; // (12 currently)
+	axis_nbounds = 2 ;
+variables:
+	float nav_lon(y, x) ;
+		nav_lon:standard_name = "longitude" ;
+		nav_lon:units = "degrees_east" ;
+		nav_lon:_Storage = "chunked" ;
+		nav_lon:_ChunkSizes = 1021, 1442 ;
+		nav_lon:_DeflateLevel = 1 ;
+		nav_lon:_Shuffle = "true" ;
+	float nav_lat(y, x) ;
+		nav_lat:standard_name = "latitude" ;
+		nav_lat:units = "degrees_north" ;
+		nav_lat:_Storage = "chunked" ;
+		nav_lat:_ChunkSizes = 1021, 1442 ;
+		nav_lat:_DeflateLevel = 1 ;
+		nav_lat:_Shuffle = "true" ;
+	float deptht(deptht) ;
+		deptht:long_name = "Vertical T levels" ;
+		deptht:units = "m" ;
+		deptht:positive = "down" ;
+		deptht:bounds = "deptht_bounds" ;
+	double time_counter(time_counter) ;
+		time_counter:standard_name = "time" ;
+		time_counter:long_name = "Time axis" ;
+		time_counter:units = "seconds since 1958-01-01 00:00:00" ;
+		time_counter:calendar = "gregorian" ;
+		time_counter:bounds = "time_counter_bounds" ;
+	float thetao(time_counter, deptht, y, x) ;
+		thetao:standard_name = "sea_water_potential_temperature" ;
+		thetao:long_name = "temperature" ;
+		thetao:units = "degC" ;
+		thetao:online_operation = "average" ;
+		thetao:coordinates = "time_counter deptht nav_lat nav_lon" ;
+		thetao:_FillValue = 1.e+20f ;
+		thetao:_Storage = "chunked" ;
+		thetao:_ChunkSizes = 1, 75, 300, 400 ;
+		thetao:_DeflateLevel = 1 ;
+		thetao:_Shuffle = "true" ;
+	float so(time_counter, deptht, y, x) ;
+		so:standard_name = "sea_water_practical_salinity" ;
+		so:long_name = "salinity" ;
+		so:units = "1e-3" ;
+		so:online_operation = "average" ;
+		so:coordinates = "time_counter deptht nav_lat nav_lon" ;
+		so:_FillValue = 1.e+20f ;
+		so:_Storage = "chunked" ;
+		so:_ChunkSizes = 1, 75, 300, 400 ;
+		so:_DeflateLevel = 1 ;
+		so:_Shuffle = "true" ;
+	float zos(time_counter, y, x) ;
+		zos:standard_name = "sea_surface_height_above_geoid" ;
+		zos:long_name = "sea surface height" ;
+		zos:units = "m" ;
+		zos:online_operation = "average" ;
+		zos:coordinates = "time_counter nav_lat nav_lon" ;
+		zos:_FillValue = 1.e+20f ;
+		zos:_Storage = "chunked" ;
+		zos:_ChunkSizes = 1, 300, 400 ;
+		zos:_DeflateLevel = 1 ;
+		zos:_Shuffle = "true" ;
+
+// global attributes:
+		:name = "ORCA025-2020ref_1m_grid_T" ;
+		:description = "ocean T grid variables" ;
+		:title = "ocean T grid variables" ;
+		:Conventions = "CF-1.6" ;
+		:timeStamp = "2020-... (illustrative)" ;
+		:_Format = "netCDF-4 classic model" ;
+}
