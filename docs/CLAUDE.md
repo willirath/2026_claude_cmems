@@ -44,6 +44,21 @@ for something different.
   module-level constants or config indirection. Prefer the obvious, spelled-out
   call over premature parameterization.
 
+## Notebooks (jupytext)
+
+When an analysis should become a Jupyter notebook, manage it with
+[**jupytext**](https://jupytext.readthedocs.io/) and keep a **`py:percent`**
+`.py` file as the authoritative source:
+
+- The comment-delimited blocks above are already `py:percent` cells — mark cell
+  boundaries with `# %%`.
+- **Edit the `.py`.** Pair it with a `.ipynb` (via jupytext) that the human
+  opens and runs in Jupyter or VS Code.
+- **Never hand-edit the `.ipynb`.** Edit the `.py` and run `jupytext --sync
+  <file>.py` so the paired notebook follows (or configure pairing so it stays in
+  sync automatically).
+- Add the tool as a dev dependency: `uv add --dev jupytext`.
+
 ## Naming scheme
 
 When creating analyses or plots, use a consistent naming scheme so figures are
@@ -61,3 +76,21 @@ easy to associate with the analysis that produced them:
 - Figures are written to the top-level **`figures/`** directory.
 - Run scripts from the project root so relative paths like `figures/…`
   resolve, e.g. `uv run python scripts/sst_north_atlantic.py`.
+
+## Runnable handoff (project README)
+
+The user should be able to run everything you build without you in the loop —
+don't be the glue that executes scripts for them. Maintain a short **`README.md`**
+at the project root that makes the work self-serve:
+
+- Show the **workflow** on a small, representative example rather than an
+  exhaustive per-script list — e.g. `uv run python scripts/sst_north_atlantic.py`
+  writes `figures/sst_north_atlantic_map.png`. Assume the user knows their way
+  around a shell and can generalize the pattern to the other scripts.
+- Because `uv run` resolves the environment on its own, these commands need no
+  manual venv activation or `pip install` step — that is the point of the
+  handoff.
+- Note any one-time setup the commands assume, e.g. CMEMS credentials via
+  `copernicusmarine login`.
+- For notebooks, say how to open them, e.g. `uv run jupyter lab`, and which
+  `.ipynb` to run.

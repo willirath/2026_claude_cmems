@@ -126,6 +126,15 @@ running them. For a walk-through of what it does with each prompt — from
 environment setup through the rendered figures — see the annotated
 [example session](docs/example_session.md).
 
+### Turning scripts into notebooks (jupytext)
+
+Start with the flat scripts above. When you want to work in a real Jupyter
+notebook, just ask — the agent uses [jupytext](https://jupytext.readthedocs.io/)
+so you get the best of both: it keeps a plain `.py` file as the source it edits
+(clean, readable diffs) and pairs it with a `.ipynb` you open and run in Jupyter
+or VS Code. You don't need to learn jupytext yourself; the conventions in
+`CLAUDE.md` tell the agent how to keep the two in sync.
+
 ### A couple of tips
 
 - **Run one project per directory.** Keep unrelated analyses in separate folders
