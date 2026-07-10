@@ -156,7 +156,9 @@ reference material on hand. This repo ships short **factsheets** in
 - [`remote-work.md`](docs/factsheets/remote-work.md) — reaching a compute-node
   JupyterLab from your laptop through an SSH/SOCKS tunnel.
 
-Copy the sheets you need into a **`factsheets/`** directory in your project. The
+Copy the sheets you need into a **`factsheets/`** directory in your project —
+wherever the agent actually runs. If you run Claude on nesh in a project directory,
+that `factsheets/` directory goes there, next to the agent, not on your laptop. The
 example `CLAUDE.md` already tells the agent to read them, so it consults the
 relevant sheet on its own and treats it as the source of truth for that area. Edit
 them to match your setup — some values (proxy address, partitions, quotas) are
@@ -177,7 +179,7 @@ site-specifics worth confirming on your account.
 
 ## 4. Moving to the nesh HPC cluster
 
-When you outgrow the laptop and want to work against **NEMO** model output on
+When you outgrow the laptop and want to work against model output on
 **nesh** (the CAU Kiel / GEOMAR cluster), the data lives *there* — so run the agent
 there too, right next to it. The flow, which you drive by hand:
 
@@ -215,12 +217,12 @@ there too, right next to it. The flow, which you drive by hand:
    above; the login node has direct internet for that.)
 
 For a **JupyterLab** notebook, run it on the compute node and reach it from your
-laptop browser through an **SSH dynamic-SOCKS tunnel**: you don't know which compute
-node your job lands on until it starts, and it's only reachable *through* the login
-node, so a SOCKS proxy lets an isolated browser reach the node's internal address.
-The [`remote-work`](docs/factsheets/remote-work.md) factsheet has the full recipe.
+laptop browser through an **SSH tunnel**: you don't know which compute node your job
+lands on until it starts, and it's only reachable *through* the login node, so the
+tunnel lets an isolated browser reach the node's internal address. The
+[`remote-work`](docs/factsheets/remote-work.md) factsheet has the full recipe.
 
-Copy the **nesh**, **remote-work**, **nemo**, and **model-outputs** factsheets into
-your project's `factsheets/` directory (see above) so the agent has the cluster,
-scheduler, filesystem, and NEMO specifics on hand. Some values (proxy address,
-partitions, quotas) are site-specifics worth confirming on your account.
+Copy the factsheets relevant to this stage into your project's `factsheets/`
+directory (see above) so the agent has the cluster, scheduler, filesystem, and
+model-output specifics on hand. Some values (proxy address, partitions, quotas) are
+site-specifics worth confirming on your account.

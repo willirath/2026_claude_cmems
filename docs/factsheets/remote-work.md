@@ -1,9 +1,9 @@
 # Remote work — reaching a compute-node Jupyter factsheet
 
-How to use the browser on your laptop to reach JupyterLab (and the dask dashboard)
-running on a nesh **compute node**. The user drives these steps by hand; the agent
-assists by drafting the job script and troubleshooting, not by opening tunnels on
-their behalf.
+How to reach JupyterLab (and the dask dashboard) running on a nesh **compute node**
+from a browser on your laptop. This sheet is the mechanism — the job, the tunnel, the
+browser flags, and what breaks — so it works equally for setting the workflow up and
+for debugging one that isn't ("why can't I see the JupyterLab?").
 
 ## Why it takes a tunnel
 
@@ -40,21 +40,37 @@ you open in the browser.
 
 ## 3. Tunnel + isolated browser (on your laptop)
 
-Don't reinvent this — GEOMAR ships a helper,
-[`run_chromium_through_ssh_tunnel.sh`](https://git.geomar.de/python/jupyter_on_HPC_setup_guide/-/blob/master/scripts/run_chromium_through_ssh_tunnel.sh),
-that opens the SOCKS tunnel and launches an isolated Chromium already configured for
-it — hand it the token URL from step 2. Under the hood it does:
+Open a dynamic SOCKS proxy through the login node, then launch an isolated
+Chromium/Chrome routed through it and pointed at the token URL from step 2. This
+script does both — save it and hand it the URL:
 
 ```bash
-ssh -f -D localhost:54321 nesh-login.rz.uni-kiel.de sleep 60
-chromium --proxy-server="socks5://localhost:54321" \
-         --proxy-bypass-list="<-loopback>" \
-         --user-data-dir=/tmp/nesh-jlab \
-         'http://nesh-clk399:8888/?token=abc123…'
+#!/usr/bin/env bash
+# run_chromium_through_ssh_tunnel.sh — reach a compute-node JupyterLab through nesh.
+#   ./run_chromium_through_ssh_tunnel.sh 'http://nesh-clk399:8888/?token=abc123…'
+set -euo pipefail
+
+URL="${1:?pass the compute-node token URL from the job output file}"
+LOGIN="${NESH_LOGIN:-nesh-login.rz.uni-kiel.de}"   # or a ~/.ssh/config alias, e.g. nesh
+PORT="${SOCKS_PORT:-54321}"                        # local SOCKS port
+BROWSER="${BROWSER_BIN:-chromium}"                 # chromium, google-chrome, …
+
+# -f backgrounds ssh after auth; `sleep 30` holds the tunnel open long enough for
+# the browser to connect, after which ssh stays up while that connection is live.
+ssh -f -D "localhost:${PORT}" "${LOGIN}" sleep 30
+
+# Isolated browser through the proxy. --proxy-bypass-list="<-loopback>" re-enables
+# SOCKS for loopback/internal hosts, which Chrome blocks by default.
+"${BROWSER}" \
+  --proxy-server="socks5://localhost:${PORT}" \
+  --proxy-bypass-list="<-loopback>" \
+  --user-data-dir="$(mktemp -d)" \
+  "${URL}"
 ```
 
-`nesh-clk399` is a placeholder for the compute node from step 2; a `~/.ssh/config`
-alias can shorten `nesh-login.rz.uni-kiel.de` to `nesh`.
+`nesh-clk399` in the URL is a placeholder for the compute node from step 2; a
+`~/.ssh/config` alias can shorten `nesh-login.rz.uni-kiel.de` to `nesh` (set
+`NESH_LOGIN=nesh`).
 
 Three things that matter when it doesn't work:
 
@@ -73,5 +89,7 @@ The dask dashboard (`:8787`) rides the **same tunnel** — it's just another int
 
 ## Source
 
-- GEOMAR Jupyter-on-HPC setup guide — <https://git.geomar.de/python/jupyter_on_HPC_setup_guide>
-  (its job script targets a different scheduler; submit the SLURM job above instead)
+- The tunnel script above is vendored here and self-contained. It derives from
+  GEOMAR's Jupyter-on-HPC setup guide
+  (<https://git.geomar.de/python/jupyter_on_HPC_setup_guide>), which is dated — its
+  job script targets a different scheduler, so use the SLURM job above instead.

@@ -6,7 +6,8 @@ subsets alike; for NEMO grid semantics see the **NEMO** factsheet.
 
 ## Read the header first (CDL)
 
-Before opening a big file, dump its structure — this reads **zero data**:
+Before writing code for a big file or for multiple files, inspect their structure —
+this reads **zero data**:
 
 ```bash
 ncdump -h -s file.nc        # -h: header only   -s: show storage/chunking attrs
@@ -39,11 +40,32 @@ the header is enough to orient yourself — no need to build a catalogue system 
 - **Align dask chunks to the disk chunks when you can.** Dask chunks that are
   integer multiples of the on-disk `_ChunkSizes` let each stored chunk be read and
   decompressed once. `open_dataset(..., chunks={})` maps one dask chunk to one
-  on-disk chunk; `chunks="auto"` picks multiples. Aim for ~100 MB per dask chunk.
-  This is a best-effort speed-up, not a hard rule: when the access pattern the
-  analysis needs fights the on-disk layout (e.g. a long point time series from a
-  map-chunked file), you can't align around it — you're forced to accept the read
-  overhead, since the layout is fixed in the file.
+  on-disk chunk; `chunks="auto"` picks multiples. This is a best-effort speed-up,
+  not a hard rule: when the access pattern the analysis needs fights the on-disk
+  layout (e.g. a long point time series from a map-chunked file), you can't align
+  around it — you're forced to accept the read overhead, since the layout is fixed
+  in the file.
+- **Size chunks by the trade-off, not a magic number.** A dask chunk has to be
+  small enough that the several a worker holds at once (a reduction can have a few
+  in flight per worker) fit comfortably in its memory, but large enough that the
+  task graph stays small — every extra task adds ~milliseconds of scheduler
+  overhead, so millions of tiny chunks bog dask down before any data moves. Tens to
+  a few hundred MB per chunk is the usual sweet spot; on a large-memory HPC
+  allocation push toward the high end (or past it), on a laptop stay low. Fewer,
+  bigger chunks trade memory headroom for a cheaper graph.
+- **Chunk arrays you combine the same way.** dask can't recompute a task, so it
+  keeps each chunk's output in memory until *every* task that consumes it has run.
+  If two arrays you add or multiply are chunked on different axes, no chunk of
+  either can be released until the whole result is done — so both arrays end up
+  fully in memory at once:
+
+  ```python
+  a = a.chunk({"x": 1, "y": -1})   # striped in y
+  b = b.chunk({"x": -1, "y": 1})   # striped in x — orthogonal to a
+  c = a + b   # every chunk of a and b must stay live until all of c is computed
+  ```
+
+  Give co-combined arrays a common chunking along their shared dims instead.
 - **Stay lazy.** `.values` / `.compute()` / `.load()` / `.plot()` pull data into
   memory *now* — on a global 3-D field that's tens of GB into one process. Reduce or
   subset **first** (`.isel`, `.mean`), then materialise only the small result. This

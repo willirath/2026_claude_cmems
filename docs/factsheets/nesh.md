@@ -3,8 +3,8 @@
 The HPC system run by Kiel University's computing centre (RZ) together with GEOMAR.
 This is reference material for the agent working on nesh — read the relevant parts
 before running anything here. Values marked _(confirm)_ drift between accounts and
-over time: check them against the live environment or ask the user. Only as a last
-resort should the user email `hpcsupport@rz.uni-kiel.de`.
+over time: check them against the live environment or ask the user. As a last
+resort, email `hpcsupport@rz.uni-kiel.de`.
 
 ## Access
 
@@ -16,7 +16,11 @@ resort should the user email `hpcsupport@rz.uni-kiel.de`.
 
 ## Scheduler: SLURM
 
-- `sbatch` (batch), `srun` / `salloc` (interactive), `squeue`, `scancel`.
+- `sbatch` (batch), `srun` / `salloc` (interactive), `squeue`, `scancel`, `sinfo`.
+- **Check the machine before you submit.** Utilization and free-node counts swing a
+  lot here, so a job can sit queued for a long time on a busy partition. `sinfo`
+  (e.g. `sinfo -p base`) shows per-partition node state — idle / allocated / down —
+  so you can size a job or steer it to a partition that will actually start soon.
 - **Login nodes are for editing, small transfers, submitting jobs, and reading
   netCDF headers — not computation.** Anything heavier goes in an allocation.
 - Interactive shell on a compute node:
@@ -55,7 +59,7 @@ export https_proxy=http://10.0.7.235:3128
 
 Login, `interactive`, and `data` nodes have direct networking. This is the most
 common reason something "works on the login node but hangs in the job." _(confirm
-the exact value and whether `no_proxy` is needed)_
+the proxy address `10.0.7.235:3128` and whether `no_proxy` is needed)_
 
 ## Filesystems (gxfs — shared parallel FS)
 
@@ -77,12 +81,43 @@ the exact value and whether `no_proxy` is needed)_
   listing of one directory (`\ls <dir>`, no `-R`) is effectively instantaneous and
   fine; it's the deep walks that cause storms.
 
-## Python
+## Package environments
 
-- Use **`uv`** (`uv add`, `uv run`). Avoid conda — it materialises 100k+ tiny files
-  and can exhaust the home **inode** quota on its own.
+Which package manager you use is up to you and the project — uv, conda, pip,
+modules, or containers all work here, **as long as you account for the filesystem:**
+
+- Environments that materialise many small files (a conda env is easily 100k+) eat
+  into the **inode** quota, and `$HOME`'s is small — file-heavy environments can
+  exhaust it on their own. Keep big or file-heavy environments on `$WORK`, and watch
+  `workquota`: the inode limit usually bites well before the byte quota does.
+
+## System modules (Lmod)
+
+System software — compilers, libraries, and tools like **Singularity** (containers)
+— is deployed as **Lmod** modules, but they are **grouped behind environment modules
+and stay hidden until you load the matching one**. `module avail` looks almost empty
+until you load an `*-env` module; only then do that environment's modules appear.
+This is the usual reason a system module "isn't found."
+
+- Load the environment first, on its own line, then the module:
+
+  ```bash
+  module load gcc12-env      # general-purpose env — most software lives here
+  module load singularity    # now visible (containers); versions drift, so omit the pin
+  ```
+
+- Other environments: `oneapi2023-env` (Intel oneAPI), `gpu-env` (GPU / CUDA stack).
+  A compiler environment does **not** auto-activate the compiler — `module load` it
+  too.
+- Browse with `module all` (everything, ignoring visibility), `module avail` (what's
+  visible now), `module list` (loaded), `module show <pkg>` (details);
+  `module --show-hidden avail` reveals hidden dev modules; `module purge` clears all.
 
 ## Source
 
 - nesh user docs — <https://www.hiperf.rz.uni-kiel.de/nesh/> (authoritative for
-  everything above)
+  everything above); see the [software / Lmod
+  page](https://www.hiperf.rz.uni-kiel.de/nesh/software/), the
+  [SLURM page](https://www.hiperf.rz.uni-kiel.de/nesh/slurm/), and the
+  [live status page](https://www.hiperf.rz.uni-kiel.de/nesh/status/) (7-day node
+  usage by partition).
