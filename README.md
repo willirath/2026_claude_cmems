@@ -135,11 +135,11 @@ so you get the best of both: it keeps a plain `.py` file as the source it edits
 or VS Code. You don't need to learn jupytext yourself; the conventions in
 `CLAUDE.md` tell the agent how to keep the two in sync.
 
-### Add domain & system fact sheets
+### Add domain & system factsheets
 
 As the analysis moves past the basics — native **NEMO** model output, the **nesh**
 HPC cluster, larger-than-memory files — the agent does better with a little grounded
-reference material on hand. This repo ships short **fact sheets** in
+reference material on hand. This repo ships short **factsheets** in
 [`docs/factsheets/`](docs/factsheets/):
 
 - [`cmems.md`](docs/factsheets/cmems.md) — the Copernicus Marine toolbox
@@ -218,9 +218,9 @@ For a **JupyterLab** notebook, run it on the compute node and reach it from your
 laptop browser through an **SSH dynamic-SOCKS tunnel**: you don't know which compute
 node your job lands on until it starts, and it's only reachable *through* the login
 node, so a SOCKS proxy lets an isolated browser reach the node's internal address.
-The [`remote-work`](docs/factsheets/remote-work.md) fact sheet has the full recipe.
+The [`remote-work`](docs/factsheets/remote-work.md) factsheet has the full recipe.
 
-Copy the **nesh**, **remote-work**, **nemo**, and **model-outputs** fact sheets into
+Copy the **nesh**, **remote-work**, **nemo**, and **model-outputs** factsheets into
 your project's `factsheets/` directory (see above) so the agent has the cluster,
 scheduler, filesystem, and NEMO specifics on hand. Some values (proxy address,
 partitions, quotas) are site-specifics worth confirming on your account.
