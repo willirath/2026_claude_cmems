@@ -67,11 +67,15 @@ the proxy address `10.0.7.235:3128` and whether `no_proxy` is needed)_
 
 | Variable | Path | Use | Backed up |
 |---|---|---|---|
-| `$HOME` | `/gxfs_home/<inst>/<user>` | code, scripts, this project, small results | yes (~150/200 GB) |
-| `$WORK` | `/gxfs_work/<inst>/<user>` | all job I/O, large & intermediate data | no (TB-scale) |
+| `$HOME` | `/gxfs_home/<inst>/<user>` | dotfiles, configs, small results | yes (~150/200 GB) |
+| `$WORK` | `/gxfs_work/<inst>/<user>` | **analysis projects**, all job I/O, large & intermediate data | no (TB-scale) |
 | `$TMPDIR` | `/scratch/SlurmTMP/<user>.<jobid>` | node-local per-job scratch, **dask spill** | no (gone at job end) |
 | `$CEPH` | `/nfs/ceph_<inst>/<user>` | cold long-term storage | no (~1 TB) |
 
+- **Keep the analysis project on `$WORK`.** Its model-data I/O and (often file-heavy)
+  environment belong on the TB-scale work filesystem, not the small backed-up
+  `$HOME`; the code is version-controlled, so `$WORK` having no backup costs you
+  nothing. Reserve `$HOME` for dotfiles and small personal files.
 - Paths are `/gxfs_home/...` and `/gxfs_work/...`, not `/home/...`.
 - Check usage with `workquota` (home/work) and `cephquota`. Inode quotas bite too.
 - It is a **shared parallel filesystem**: recursive metadata walks (`find`,

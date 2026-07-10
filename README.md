@@ -205,16 +205,19 @@ there too, right next to it. The flow, which you drive by hand:
    export https_proxy=http://10.0.7.235:3128
    ```
 
-4. **Launch Claude in your project and drive everything from there:**
+4. **Launch Claude in your project on `$WORK` and drive everything from there:**
 
    ```bash
-   cd "$HOME/projects/nemo_cmems_analysis" && claude
+   cd "$WORK/projects/nemo_cmems_analysis" && claude
    ```
 
-   Working inside the allocation lets the agent open real files, read chunk shapes,
-   and render fields as it iterates — the whole point of keeping it next to the data.
-   (First time: install `uv` and create the project directory as in the laptop steps
-   above; the login node has direct internet for that.)
+   Put the project on **`$WORK`**, not `$HOME`: the model output and analysis I/O are
+   large and belong on the TB-scale work filesystem (the small, backed-up `$HOME`
+   would fill up), and the code is safe in git regardless. Working inside the
+   allocation lets the agent open real files, read chunk shapes, and render fields as
+   it iterates — the whole point of keeping it next to the data. (First time: create
+   the project directory under `$WORK` and install `uv` as in the laptop steps above;
+   the login node has direct internet for that.)
 
 For a **JupyterLab** notebook, run it on the compute node and reach it from your
 laptop browser through an **SSH tunnel**: you don't know which compute node your job

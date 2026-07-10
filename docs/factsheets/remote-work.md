@@ -23,7 +23,7 @@ an isolated browser at the node's internal `host:port`.
 #SBATCH --time=08:00:00
 #SBATCH --output=jupyterlab.%j.out
 
-cd "$HOME/projects/<your-project>"
+cd "$WORK/projects/<your-project>"
 export http_proxy=http://10.0.7.235:3128
 export https_proxy=http://10.0.7.235:3128
 uv run jupyter lab --no-browser --ip="$(hostname)"
