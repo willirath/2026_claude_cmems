@@ -135,6 +135,22 @@ so you get the best of both: it keeps a plain `.py` file as the source it edits
 or VS Code. You don't need to learn jupytext yourself; the conventions in
 `CLAUDE.md` tell the agent how to keep the two in sync.
 
+### Moving to an HPC cluster (nesh)
+
+When you outgrow the laptop and want to work against **NEMO** model output on
+**nesh** (the CAU Kiel / GEOMAR HPC system), keep this same project setup and add
+the short on-ramp in **[docs/hpc_nesh.md](docs/hpc_nesh.md)**. It covers where to
+run Claude (on the cluster, not the laptop), one-time SSH/tunnel setup, running
+under SLURM instead of on the login node, reaching a compute-node Jupyter through
+an SSH tunnel, keeping the agent from stressing the shared filesystem while
+staying oriented via a small data catalogue, and the NEMO / dask specifics the
+agent needs to stay correct and in memory. It ships an appendable
+[`CLAUDE.md` snippet](docs/claude_md_nesh_snippet.md), an example
+[`.claude/settings.json`](docs/settings_nesh_example.json), and a
+[catalogue template](docs/catalogue_template/). The laptop path above stays your
+day-one starting point — the aim of that doc is just to get you analysing on nesh
+at all; you can tune the workflow later.
+
 ### A couple of tips
 
 - **Run one project per directory.** Keep unrelated analyses in separate folders

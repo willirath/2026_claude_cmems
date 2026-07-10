@@ -1,0 +1,9 @@
+# Illustrative example — replace by running ./regenerate.sh (a single, bounded
+# `find -maxdepth 2` you run deliberately; see ../hpc_nesh.md §6). This shallow
+# snapshot lets the agent know the layout without walking the tree live.
+/gxfs_work/geomar/<user>/data
+/gxfs_work/geomar/<user>/data/ORCA025
+/gxfs_work/geomar/<user>/data/ORCA025/hindcast
+/gxfs_work/geomar/<user>/data/ORCA025/nest_1_agrif
+/gxfs_work/geomar/<user>/data/CMEMS
+/gxfs_work/geomar/<user>/data/CMEMS/GLOBAL_ANALYSISFORECAST_PHY_001_024

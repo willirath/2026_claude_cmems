@@ -3,6 +3,11 @@
 These are working conventions for this project. Follow them unless the user asks
 for something different.
 
+> Running on the nesh HPC cluster? Also append the
+> [nesh snippet](claude_md_nesh_snippet.md) to your project `CLAUDE.md` and follow
+> [`hpc_nesh.md`](hpc_nesh.md) — it adds the scheduler, filesystem, proxy, data
+> catalogue, and NEMO/dask conventions on top of the laptop conventions below.
+
 ## Python environment & packages
 
 - Use **`uv`** for all Python environment and dependency management.
