@@ -135,6 +135,33 @@ so you get the best of both: it keeps a plain `.py` file as the source it edits
 or VS Code. You don't need to learn jupytext yourself; the conventions in
 `CLAUDE.md` tell the agent how to keep the two in sync.
 
+### Add domain & system fact sheets
+
+As the analysis moves past the basics — native **NEMO** model output, the **nesh**
+HPC cluster, larger-than-memory files — the agent does better with a little grounded
+reference material on hand. This repo ships short **fact sheets** in
+[`docs/factsheets/`](docs/factsheets/):
+
+- [`cmems.md`](docs/factsheets/cmems.md) — the Copernicus Marine toolbox
+  (`copernicusmarine`): login, catalogue search, opening data lazily vs.
+  downloading, and the ARCO geo-/time-series stores.
+- [`model-outputs.md`](docs/factsheets/model-outputs.md) — inspecting netCDF with
+  CDL, on-disk chunking/compression and the read penalty, and staying lazy on big
+  files.
+- [`nemo.md`](docs/factsheets/nemo.md) — NEMO/ORCA output: the staggered C-grid,
+  `grid_T/U/V/W` files, curvilinear coordinates, and worked curl / overturning
+  examples.
+- [`nesh.md`](docs/factsheets/nesh.md) — the nesh cluster: SLURM, partitions, the
+  internet proxy, and the shared filesystems.
+- [`remote-work.md`](docs/factsheets/remote-work.md) — reaching a compute-node
+  JupyterLab from your laptop through an SSH/SOCKS tunnel.
+
+Copy the sheets you need into a **`factsheets/`** directory in your project. The
+example `CLAUDE.md` already tells the agent to read them, so it consults the
+relevant sheet on its own and treats it as the source of truth for that area. Edit
+them to match your setup — some values (proxy address, partitions, quotas) are
+site-specifics worth confirming on your account.
+
 ### A couple of tips
 
 - **Run one project per directory.** Keep unrelated analyses in separate folders

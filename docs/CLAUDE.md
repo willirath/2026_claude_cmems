@@ -3,6 +3,15 @@
 These are working conventions for this project. Follow them unless the user asks
 for something different.
 
+## Fact sheets
+
+If this project includes a **`factsheets/`** directory — short reference notes on
+the data services, model-grid conventions, and compute environment this work
+touches — **read the relevant sheet before working in that area** and treat it as
+the source of truth for the paths, commands, and gotchas it covers. When a sheet
+marks a value as "confirm", check it against the live environment or ask the user
+rather than assuming. Keep the sheets current when you learn something durable.
+
 ## Python environment & packages
 
 - Use **`uv`** for all Python environment and dependency management.
