@@ -32,8 +32,9 @@ Run `ncdump -h` (or check `ds.coords`):
 ## Two selection traps
 
 - **`.sel(lon, lat)` fails on native ORCA.** `nav_lon` / `nav_lat` are 2-D
-  curvilinear arrays over `(y, x)`, not axes. Select with **`.isel(x=…, y=…)`**, or
-  use grid-aware tools (`cf-xarray`, `xgcm`, `xnemogcm`; `xESMF` to regrid).
+  curvilinear arrays over `(y, x)`, not 1-D dimension coordinates, so label-based
+  `.sel` on longitude/latitude has no axis to index against. Select by integer
+  index with **`.isel(x=…, y=…)`**.
 - **The silent one — never do arithmetic mixing `grid_T` / `grid_U` / `grid_V` by
   index.** They share the same integer `(y, x)` dims but sit half a cell apart, so
   xarray combines them with **no error** and the result is quietly wrong (e.g.
