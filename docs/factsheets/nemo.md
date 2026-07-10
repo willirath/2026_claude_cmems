@@ -29,64 +29,82 @@ Run `ncdump -h` (or check `ds.coords`):
   joined by a **north fold** across the top rows — those rows mirror/duplicate cells
   and vector components flip sign. Be wary of the northernmost rows.
 
-## Two selection traps
+## Indexing & alignment gotchas
 
 - **`.sel(lon, lat)` fails on native ORCA.** `nav_lon` / `nav_lat` are 2-D
   curvilinear arrays over `(y, x)`, not 1-D dimension coordinates, so label-based
   `.sel` on longitude/latitude has no axis to index against. Select by integer
   index with **`.isel(x=…, y=…)`**.
+- **`x` / `y` usually have no coordinate variables.** NEMO files typically ship the
+  horizontal (and often the vertical/time) dimensions as bare sizes with no index
+  coordinate. Then a `.shift(x=1)` or `.diff("x")` result has nothing for xarray to
+  align on, so recombining it with the original array — which every C-grid stagger
+  operation does — silently mis-pairs or drops cells. **Assign integer coords right
+  after loading** so shifts and differences line up predictably:
+
+  ```python
+  import numpy as np
+  ds = ds.assign_coords(x=np.arange(ds.sizes["x"]), y=np.arange(ds.sizes["y"]))
+  ```
+
 - **The silent one — never do arithmetic mixing `grid_T` / `grid_U` / `grid_V` by
   index.** They share the same integer `(y, x)` dims but sit half a cell apart, so
   xarray combines them with **no error** and the result is quietly wrong (e.g.
-  `speed = sqrt(uo**2 + vo**2)` pairs points that aren't co-located). Move fields to
-  a common point first with `xgcm` / `xnemogcm`. Likewise an unweighted `.mean` over
-  `(y, x)` is biased — weight by cell area `e1t*e2t` (and `e3t` for volumes) and
-  apply `tmask`.
+  `speed = sqrt(uo**2 + vo**2)` pairs points that aren't co-located). Move each field
+  to a common point first — average the two neighbouring U (or V) cells onto the
+  T-point (see below). Likewise an unweighted `.mean` over `(y, x)` is biased —
+  weight by cell area `e1t*e2t` (and `e3t` for volumes) and apply `tmask`.
 
-## Derived quantities on the C-grid (xgcm / xnemogcm)
+## Derived quantities on the C-grid (plain xarray)
 
-Open the `grid_*` files together with the domain file and build an xgcm `Grid`:
+No grid-aware wrapper is needed: the C-grid operators are a few `.shift` / difference
+/ average steps with the `e1/e2/e3` scale factors. Reason from the staggering — which
+neighbouring points to combine, and which point the result lands on — rather than
+trusting a black box. (Assign `x`/`y` coords first, as above.) Two primitives:
+
+- **Interpolate** a face value to the centre = **average the two neighbours**, e.g.
+  U→T is `0.5 * (u + u.shift(x=1))` (NEMO's convention puts `u(i)` on the east face
+  of `t(i)`, so `u(i)` and `u(i-1)` straddle `t(i)`); V→T is `0.5 * (v + v.shift(y=1))`.
+- **Differentiate** = **neighbour difference ÷ local scale factor**, e.g.
+  `(a.shift(x=-1) - a) / e1?`.
+
+The shift direction (`+1` vs `-1`) follows the file's index convention for where
+U/V/F sit relative to T — **verify it on the data** (e.g. check a land mask or a
+known-sign field lines up) rather than assuming.
+
+**Relative vorticity / curl** ζ = ∂v/∂x − ∂u/∂y at F-points. NEMO writes it with the
+metrics folded in, ζ = 1/(e1f·e2f) · [ Δ_x(e2v·v) − Δ_y(e1u·u) ] where Δ_x A(i) =
+A(i+1) − A(i):
 
 ```python
-from xnemogcm import open_nemo_and_domain_cfg
-import xgcm
-ds = open_nemo_and_domain_cfg(nemo_files=[...], domcfg_files=["mesh_mask.nc"])
-metrics = {("X",): ["e1t", "e1u", "e1v", "e1f"],   # zonal widths [m]
-           ("Y",): ["e2t", "e2u", "e2v", "e2f"],   # meridional widths [m]
-           ("Z",): ["e3t_0", "e3u_0", "e3v_0", "e3f_0", "e3w_0"]}  # thicknesses [m]
-grid = xgcm.Grid(ds, metrics=metrics, periodic=False)
-bd = {"boundary": "fill", "fill_value": 0.0}
+u = ds.uo.isel(depthu=0); v = ds.vo.isel(depthv=0)          # surface level
+dvx = (ds.e2v * v).shift(x=-1) - (ds.e2v * v)               # ∂/∂x of e2v·v, lands on F
+duy = (ds.e1u * u).shift(y=-1) - (ds.e1u * u)               # ∂/∂y of e1u·u, lands on F
+zeta = (dvx - duy) / (ds.e1f * ds.e2f) * fmask_surface      # fmask[0] or fmaskutil
 ```
 
-**Relative vorticity / curl** ζ = ∂v/∂x − ∂u/∂y, evaluated at F-points:
+**Meridional overturning streamfunction (z-coordinates)** ψ(y, z) in Sv — meridional
+volume transport, summed zonally, integrated over depth from the sea floor upward:
 
 ```python
-u = ds.uo.isel(z_c=0); v = ds.vo.isel(z_c=0)
-zeta = (grid.diff(v * ds.e2v, "X", **bd) - grid.diff(u * ds.e1u, "Y", **bd)) \
-       / (ds.e1f * ds.e2f) * ds.fmaskutil        # lives on (x_f, y_f)
-```
-
-**Meridional overturning streamfunction (z-coordinates)** ψ(y, z) in Sv —
-meridional volume transport, summed zonally, integrated over depth from the sea
-floor upward:
-
-```python
-vtrsp = ds.vo * ds.e1v * (ds.e3v_0 * ds.vmask)          # m^3/s per cell
-Vz = vtrsp.sum("x_c")                                    # zonal integral -> (z_c, y_f)
-psi = -Vz.isel(z_c=slice(None, None, -1)).cumsum("z_c").isel(z_c=slice(None, None, -1)) / 1e6
+e3v = ds.e3v_0 * ds.vmask                    # V-cell thickness [m], land-masked
+vtrsp = ds.vo * ds.e1v * e3v                 # meridional volume transport per cell [m^3/s]
+Vz = vtrsp.sum("x")                          # zonal integral -> (depth, y)
+psi = -Vz.isel(depthv=slice(None, None, -1)).cumsum("depthv").isel(depthv=slice(None, None, -1)) / 1e6
 ```
 
 Sanity check: the Atlantic (AMOC) cell should come out **positive** (order +15 Sv
 near 1000 m) — sign and integration direction are conventions, so verify it. Under a
 non-linear free surface (z\*/vvl) use the **time-varying `e3v(t)`**, not `e3v_0`.
-Dim names (`x_c`/`x_f`, `z_c`) are xnemogcm's; raw files use `x`, `y`, `deptht`,
-`time_counter`. Field names are `uo` / `vo` / `thetao` / `so` in NEMO 4+ and CMEMS.
+Dimension names (`x`/`y`, `depthu`/`depthv`/`deptht`, `time_counter`) and field names
+(`uo`/`vo`/`thetao`/`so` in NEMO 4+ and CMEMS) vary by product — adapt them to the
+file.
 
 ## Sources
 
-- NEMO reference manual — [C-grid & scale factors](https://www.nemo-ocean.eu/doc/node19.html) ·
+- NEMO reference manual — [C-grid & scale factors](https://www.nemo-ocean.eu/doc/node19.html)
+  (defines the discrete curl above) ·
   [ORCA tripolar grid](https://www.nemo-ocean.eu/doc/node108.html)
 - NEMO user guide — <https://sites.nemo-ocean.io/user-guide/>
-- xgcm NEMO example — <https://xgcm.readthedocs.io/en/stable/xgcm-examples/04_nemo_idealized.html>
-- xnemogcm — <https://xnemogcm.readthedocs.io/>
-- MOC algorithm reference: CDFTOOLS `cdfmoc` — <https://github.com/meom-group/CDFTOOLS>
+- MOC algorithm reference (integrand, zonal sum, sign): CDFTOOLS `cdfmoc` —
+  <https://github.com/meom-group/CDFTOOLS>

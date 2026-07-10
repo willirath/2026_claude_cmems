@@ -172,3 +172,55 @@ site-specifics worth confirming on your account.
 - **You need CMEMS credentials** to download data. Register (free) at
   <https://marine.copernicus.eu/> and log in once with
   `copernicusmarine login` — the agent can walk you through this.
+
+---
+
+## 4. Moving to the nesh HPC cluster
+
+When you outgrow the laptop and want to work against **NEMO** model output on
+**nesh** (the CAU Kiel / GEOMAR cluster), the data lives *there* — so run the agent
+there too, right next to it. The flow, which you drive by hand:
+
+1. **SSH to a login node** (off-campus, connect the CAU or GEOMAR VPN first; a
+   `~/.ssh/config` alias can shorten this to `ssh nesh`):
+
+   ```bash
+   ssh <username>@nesh-login.rz.uni-kiel.de
+   ```
+
+2. **Grab an interactive allocation** on the general-purpose `base` partition —
+   compute belongs in a scheduler job, never on the login node:
+
+   ```bash
+   srun --pty --time=04:00:00 --mem=16G --cpus-per-task=4 --partition=base /bin/bash
+   ```
+
+3. **Set the proxy** so downloads *and Claude's own API traffic* can reach the
+   internet from the compute node (this is the usual reason a job "can't connect"):
+
+   ```bash
+   export http_proxy=http://10.0.7.235:3128
+   export https_proxy=http://10.0.7.235:3128
+   ```
+
+4. **Launch Claude in your project and drive everything from there:**
+
+   ```bash
+   cd "$HOME/projects/nemo_cmems_analysis" && claude
+   ```
+
+   Working inside the allocation lets the agent open real files, read chunk shapes,
+   and render fields as it iterates — the whole point of keeping it next to the data.
+   (First time: install `uv` and create the project directory as in the laptop steps
+   above; the login node has direct internet for that.)
+
+For a **JupyterLab** notebook, run it on the compute node and reach it from your
+laptop browser through an **SSH dynamic-SOCKS tunnel**: you don't know which compute
+node your job lands on until it starts, and it's only reachable *through* the login
+node, so a SOCKS proxy lets an isolated browser reach the node's internal address.
+The [`remote-work`](docs/factsheets/remote-work.md) fact sheet has the full recipe.
+
+Copy the **nesh**, **remote-work**, **nemo**, and **model-outputs** fact sheets into
+your project's `factsheets/` directory (see above) so the agent has the cluster,
+scheduler, filesystem, and NEMO specifics on hand. Some values (proxy address,
+partitions, quotas) are site-specifics worth confirming on your account.
