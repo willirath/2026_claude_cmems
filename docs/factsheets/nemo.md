@@ -145,15 +145,21 @@ file.
 
 ## Sources
 
-- NEMO source code — <https://forge.nemo-ocean.eu/nemo/nemo> — often the clearest
-  ground truth. The discrete operators used above are in `src/OCE/DYN/`:
+For an agent the **git-hosted sources below are easier to read and grep than the
+rendered PDF or HTML** — go to the `.F90` / `.tex` / `.rst` directly.
+
+- NEMO model source code — <https://forge.nemo-ocean.eu/nemo/nemo> — often the
+  clearest ground truth. The discrete operators used above are in `src/OCE/DYN/`:
   `divhor.F90` (divergence), `dynkeg.F90` (kinetic energy), and `dynvor.F90`
   (vorticity, incl. the ENS / ENE / EEN / ENT scheme options).
-- NEMO reference manual ("NEMO ocean engine") — <https://doi.org/10.5281/zenodo.6334656>
-  — single PDF on Zenodo; the C-grid, scale factors, and ORCA tripolar grid are
-  chapters within it. (The old per-section `nemo-ocean.eu/doc/node*.html` pages are
-  gone — don't link them.)
-- NEMO user guide (install / config / run) — <https://sites.nemo-ocean.io/user-guide/>
+- NEMO reference manual ("NEMO ocean engine") — **LaTeX source**
+  <https://forge.nemo-ocean.eu/nemo/doc/manuals> (NEMO / SI³ / TOP; grep the `.tex`
+  for the C-grid, scale factors, and ORCA tripolar grid). Published PDF on Zenodo —
+  <https://doi.org/10.5281/zenodo.6334656>. (The old per-section
+  `nemo-ocean.eu/doc/node*.html` pages are gone — don't link them.)
+- NEMO user guide (install / config / run) — rendered
+  <https://sites.nemo-ocean.io/user-guide/>, reStructuredText source
+  <https://forge.nemo-ocean.eu/nemo/doc/guide>.
 - CDFTOOLS — <https://github.com/meom-group/CDFTOOLS> — reference implementations of
   standard NEMO diagnostics (`cdfcurl`, `cdfdiv`, overturning `cdfmoc`, …); a great
   cross-check for the integrand, staggering, and sign of anything you build.
