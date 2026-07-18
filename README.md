@@ -332,7 +332,10 @@ A notebook session then takes two steps:
    ```
 
    It opens the SOCKS tunnel through the login node and launches an isolated
-   Chrome/Chromium routed through it, already pointed at the notebook.
+   Chrome/Chromium routed through it, already pointed at the notebook. The URL
+   is optional — omit it and the browser opens blank, so you can `CTRL+R`-recall
+   the command and fire it off before the job's output file exists, then paste
+   the token URL into the address bar once the window is up.
 
 The script runs on macOS, Linux, and Windows (there: in Git Bash) and finds
 Chrome or Chromium on its own; set `BROWSER_BIN` if yours lives somewhere
