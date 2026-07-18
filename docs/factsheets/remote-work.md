@@ -44,10 +44,18 @@ Open a dynamic SOCKS proxy through the login node, then launch an isolated
 Chromium/Chrome routed through it and pointed at the token URL from step 2. The
 script `bin/remote_tunnel_chrome.sh` (vendored in the getting-started repo; the
 copy below is kept in sync with it) does both, on macOS, Linux, and Windows —
-on Windows, run it in **Git Bash**. Hand it the login node and the URL:
+on Windows, run it in **Git Bash**. Hand it the login node and, optionally, the URL:
 
 ```bash
 ./remote_tunnel_chrome.sh <user>@nesh-login.rz.uni-kiel.de 'http://nesh-clk399:8888/?token=abc123…'
+```
+
+The URL is optional. Drop it and the browser just opens — paste the token URL
+into the address bar once the window is up. That way you can `CTRL+R`-recall the
+tunnel command and fire it off before you've even copied the URL:
+
+```bash
+./remote_tunnel_chrome.sh <user>@nesh-login.rz.uni-kiel.de
 ```
 
 ```bash
@@ -55,15 +63,19 @@ on Windows, run it in **Git Bash**. Hand it the login node and the URL:
 # remote_tunnel_chrome.sh — reach a compute-node JupyterLab through the nesh login node.
 #
 #   ./remote_tunnel_chrome.sh <user>@nesh-login.rz.uni-kiel.de 'http://nesh-clk399:8888/?token=abc123…'
+#   ./remote_tunnel_chrome.sh <user>@nesh-login.rz.uni-kiel.de   # then paste the URL in the browser
 #
 # Opens a dynamic SOCKS proxy through the login node, then launches an isolated
-# Chrome/Chromium routed through it, pointed at the token URL from the Jupyter
-# job output file. Works on macOS, Linux, and Windows (run it in Git Bash). The
-# same script is inlined in docs/factsheets/remote-work.md — keep the two in sync.
+# Chrome/Chromium routed through it. The token URL from the Jupyter job output
+# file is an optional second argument — pass it to open it straight away, or omit
+# it and paste it into the browser's address bar once the window is up (handy for
+# a CTRL+R recall of the command before you have the URL). Works on macOS, Linux,
+# and Windows (run it in Git Bash). The same script is inlined in
+# docs/factsheets/remote-work.md — keep the two in sync.
 set -euo pipefail
 
 LOGIN="${1:?pass the login node, e.g. jdoe@nesh-login.rz.uni-kiel.de (an ssh-config alias works too)}"
-URL="${2:?pass the compute-node token URL from the Jupyter job output file}"
+URL="${2:-}"  # optional: the compute-node token URL, else paste it in the browser
 
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) WINDOWS=1 ;; *) WINDOWS=0 ;; esac
 
@@ -119,7 +131,7 @@ GOOGLE_BYPASS='google.com;*.google.com;google.de;*.google.de;google.fr;*.google.
   --proxy-server="socks5://localhost:${PORT}" \
   --proxy-bypass-list="<-loopback>;${GOOGLE_BYPASS}" \
   --user-data-dir="${USER_DATA_DIR}" \
-  "${URL}"
+  ${URL:+"${URL}"}
 ```
 
 `nesh-clk399` in the URL is a placeholder for the compute node from step 2; a
